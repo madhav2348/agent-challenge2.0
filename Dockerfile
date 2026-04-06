@@ -1,38 +1,37 @@
-FROM ollama/ollama:0.7.0
+# syntax=docker/dockerfile:1
 
-# Qwen2.5:1.5b - Docker
-ENV API_BASE_URL=http://127.0.0.1:11434/api
-ENV MODEL_NAME_AT_ENDPOINT=qwen2.5:32b
+FROM node:23-slim AS base
 
-# Qwen2.5:32b = Docker
-# ENV API_BASE_URL=http://127.0.0.1:11434/api
-# ENV MODEL_NAME_AT_ENDPOINT=qwen2.5:32b
-
-# Install system dependencies and Node.js
+# Install system dependencies needed for native modules (e.g. better-sqlite3)
 RUN apt-get update && apt-get install -y \
-  curl \
-  && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
-  && apt-get install -y nodejs \
-  && rm -rf /var/lib/apt/lists/* \
-  && npm install -g pnpm
+  python3 \
+  make \
+  g++ \
+  git \
+  && rm -rf /var/lib/apt/lists/*
 
-# Create app directory
+# Disable telemetry
+ENV ELIZAOS_TELEMETRY_DISABLED=true
+ENV DO_NOT_TRACK=1
+
 WORKDIR /app
 
-# Copy package files
-COPY .env package.json pnpm-lock.yaml ./
+# Install pnpm
+RUN npm install -g pnpm
 
-# Install dependencies
+# Copy package manifest and install dependencies
+COPY package.json ./
 RUN pnpm install
 
-# Copy the rest of the application
+# Copy all source files
 COPY . .
 
-# Build the project
-RUN pnpm run build
+# Create data directory for SQLite
+RUN mkdir -p /app/data
 
-# Override the default entrypoint
-ENTRYPOINT ["/bin/sh", "-c"]
+EXPOSE 3000
 
-# Start Ollama service and pull the model, then run the app
-CMD ["ollama serve & sleep 5 && ollama pull ${MODEL_NAME_AT_ENDPOINT} && pnpm run dev"]
+ENV NODE_ENV=production
+ENV SERVER_PORT=3000
+
+CMD ["pnpm", "start"]
