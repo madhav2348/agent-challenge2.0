@@ -3,7 +3,7 @@
     {
       "id": "agent",
       "args": {
-        "image": "yourusername/nosana-eliza-agent:latest",
+        "image": "madhav2348/nosana-eliza-agent:latest",
         "expose": 3000,
         "env": {
           "OPENAI_API_KEY": "nosana",

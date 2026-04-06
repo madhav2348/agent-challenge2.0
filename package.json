@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "build": "tsc",
     "start": "elizaos start --character ./characters/agent.character.json",
     "dev": "elizaos dev --character ./characters/agent.character.json"
   },
